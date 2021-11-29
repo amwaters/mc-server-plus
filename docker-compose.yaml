@@ -1,0 +1,35 @@
+# Usage:
+#   docker compose up --build --detach
+#   docker compose logs --tail 100 --follow
+
+
+services:
+
+  mc-server:
+    build: { context: ./src, args: { IMAGE: optimised-server } }
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: 'true'
+      SEED: Wollongang
+      ENABLE_RCON: 'true'
+      RCON_PASSWORD: 1e39d9107c690b3b447d1896b11c8f6a
+    volumes:
+      - minecraft:/app/minecraft
+    ports:
+      - 25565:25565
+
+  world-backup:
+    build: { context: ./src, args: { IMAGE: world-backup } }
+    restart: unless-stopped
+    environment:
+      RCON_PASSWORD: 1e39d9107c690b3b447d1896b11c8f6a
+    volumes:
+      - minecraft:/app/minecraft
+      - backups:/app/backups
+    links:
+      - mc-server
+
+
+volumes:
+  minecraft:
+  backups:
