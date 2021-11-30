@@ -2,9 +2,10 @@
 HELP="Downloads files.
 download url <Url> <HashMethod> <Hash>
 download minecraft <MinecraftVersion> <ObjectName>
+download vanilla-tweaks <PackType> <MinecraftVersion> <PacksJson>
 Example: download minecraft 1.18-pre3 server
 "
-REQUIREMENTS="curl jq"
+REQUIREMENTS="curl jq unzip"
 MANIFEST_URL="https://launchermeta.mojang.com/mc/game/version_manifest_v2.json"
 
 set -e
@@ -19,15 +20,6 @@ function get_url {
 # Performs a jq on stdin, dumps raw output to stdout
 function jqr {
     jq --raw-output "$2" <<< "$1"
-}
-
-# Gets the manifest for a Minecraft version, dumps to stdout
-function get_mc_version_manifest {
-    _URL=` \
-        get_url "$MANIFEST_URL" \
-        | jq -r ".versions[] | select(.id==\"$1\").url" \
-    `
-    get_url "$_URL"
 }
 
 function assert_file {
@@ -84,7 +76,20 @@ function download_file {
 
     ) && ( rm -f -- "$_TMP" ) \
       || ( RC=$?; rm -f -- "$_TMP"; exit $RC )
+}
 
+
+
+#######################
+#  MINECRAFT OBJECTS
+
+# Gets the manifest for a Minecraft version, dumps to stdout
+function get_mc_version_manifest {
+    _URL=` \
+        get_url "$MANIFEST_URL" \
+        | jq -r ".versions[] | select(.id==\"$1\").url" \
+    `
+    get_url "$_URL"
 }
 
 # Downloads a Minecraft object into the current directory.
@@ -102,6 +107,58 @@ function download_mc_object {
     download_file "$_URL" size "$_SIZE" sha1 "$_SHA1"
 }
 
+
+
+#######################
+#  VANILLA TWEAKS
+
+# Downloads a Vanilla Tweaks zip.
+function download_vt_zip {
+    _TYPE="$1"
+    _VER="$2"
+    _PACKS=`jq -c . <<< "$3"`
+
+    _URL="https://vanillatweaks.net/assets/server/zip${_TYPE}.php"
+
+    _TMP=`mktemp`
+    (
+        # Download file
+        echo -n "Downloading Vanilla Tweaks ($_VER) ... " >&2
+        _ZIP_RESPONSE="$( \
+          curl -X POST \
+            --form "version=$_VER" \
+            --form "packs=$_PACKS" \
+            --silent \
+            "$_URL" )"
+        echo "RESPONSE: $_ZIP_RESPONSE"
+        if [ `jq -r '.status' <<< "$_ZIP_RESPONSE"` != "success" ]; then
+            echo "Error from Vanilla Tweaks: $_ZIP_REPSONSE"
+            exit 1
+        fi
+        _ZIP_URL=`jq -r '.link' <<< "$_ZIP_RESPONSE"`
+        echo "ZIP URL: $_ZIP_URL" >&2
+        curl --silent --output "$_TMP" "https://vanillatweaks.net/$_ZIP_URL"
+        echo "TMP FILE: $_TMP" >&2
+
+        # Extract file
+        if [ "$_TYPE" == "datapacks" ]; then
+            echo -n "Extracting Vanilla Tweaks ... " >&2
+            mkdir -p "./vanilla-tweaks"
+            unzip -od "./vanilla-tweaks" "$_TMP"
+            echo "OK" >&2
+        elif [ "$_TYPE" == "craftingtweaks" ]; then
+            mv "$_TMP" "./vanilla-tweaks/craftingtweaks.zip"
+        fi
+
+    ) && ( rm -f -- "$_TMP" ) \
+      || ( RC=$?; rm -f -- "$_TMP"; exit $RC )
+}
+
+
+
+##########
+#  MAIN
+
 function main {
     _SRC="$1"
     shift
@@ -110,6 +167,8 @@ function main {
         download_file "$@"
     elif [ "$_SRC" == minecraft ]; then
         download_mc_object "$@"
+    elif [ "$_SRC" == "vanilla-tweaks" ]; then
+        download_vt_zip "$@"
     fi
 }
 

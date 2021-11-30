@@ -3,7 +3,42 @@
 #   docker compose logs --tail 100 --follow
 
 x-common-args: &x-common-args
-  MC_VERSION: 1.18-rc3
+  MC_VERSION: 1.18-rc4
+  VT_VERSION: 1.17
+  VT_DATAPACKS: '
+    {
+      "survival": [
+        "fast leaf decay",
+        "afk display",
+        "multiplayer sleep",
+        "graves",
+        "durability ping",
+        "track raw statistics",
+        "villager workstation highlights"
+      ],
+      "items": [
+        "armored elytra",
+        "player head drops"
+      ],
+      "mobs": [
+        "dragon drops",
+        "more mob heads",
+        "silence mobs",
+        "villager death messages"
+      ],
+      "hermitcraft": [
+        "wandering trades"
+      ]
+    }'
+  VT_CRAFTING: '
+    {
+      "quality of life": [
+        "dropper to dispenser",
+        "rotten flesh to leather",
+        "universal dyeing"
+      ]
+    }'
+  LEGACY_ADVANCEMENTS: 'true'
 
 x-rcon-env: &x-rcon-env
   ENABLE_RCON: 'true'

@@ -9,6 +9,7 @@
 + Automated backups
 + Version control via build arguments
 + Settings control via environment variables
++ Fetches latest datapacks from [Vanilla Tweaks](https://vanillatweaks.net/)
 
 
 ## Prerequisites
@@ -37,7 +38,7 @@
 + Server optimisations
 + Parallel dimension loading utility
 + Client-side mod builds and other resources
-+ Resource pack management
++ Additional resource pack management
 + `web-proxy`: A reverse proxy for the microservices network
 + `mapper`: Generates maps from world data
 + `mapper-web`: Web app for viewing maps in near-real-time

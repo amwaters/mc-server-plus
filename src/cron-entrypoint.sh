@@ -11,8 +11,10 @@ function main {
     echo "Starting cron job"
     echo "$1" "root bash -c \"$2\" > /tmp/stdout 2> /tmp/stderr" > /etc/crontab
 
-    [ ! -p mkfifo ] && mkfifo /tmp/stdout /tmp/stderr || true
-    chmod 0666 /tmp/stdout /tmp/stderr
+    if [ ! -p /tmp/stdout ]; then
+        mkfifo /tmp/stdout /tmp/stderr
+        chmod 0666 /tmp/stdout /tmp/stderr
+    fi
     tail -f /tmp/stdout &
     tail -f /tmp/stderr >&2 &
     cron -f -L ${CRON_LOG_LEVEL:-15}

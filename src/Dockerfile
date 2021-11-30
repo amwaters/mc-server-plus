@@ -5,6 +5,10 @@ ARG IMAGE=optimised-server
 ARG MC_VERSION=1.18-rc3
 ARG OPEN_JDK_VERSION=17.0
 ARG DEBIAN_VERSION=bullseye
+ARG VT_VERSION=1.17
+ARG VT_DATAPACKS=
+ARG VT_CRAFTING=
+ARG LEGACY_ADVANCEMENTS=
 
 
 
@@ -37,6 +41,10 @@ ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
 FROM deb-base AS download-cache
 ARG MC_VERSION
+ARG VT_VERSION
+ARG VT_DATAPACKS
+ARG VT_CRAFTING
+ARG LEGACY_ADVANCEMENTS
 WORKDIR /app
 COPY ./download.sh .
 COPY ./download-cache.sh .
@@ -128,11 +136,22 @@ EXPOSE 25575
 CMD [ "/app/server.sh" ]
 
 
-
 ####################################
 #  MOD-OPTIMISED MINECRAFT SERVER
 
-FROM vanilla-server AS optimised-server
+FROM vanilla-server AS vanilla-server-datapacks
+WORKDIR /app
+COPY --from=download-cache /cache/vanilla-tweaks/* /app/datapacks/
+COPY --from=download-cache LegacyAdvancements.zip* /app/datapacks/
+
+
+#############################################
+#  VANILLA MINECRAFT SERVER WITH DATAPACKS
+
+FROM vanilla-server-datapacks AS optimised-server
+WORKDIR /app
+
+
 
 
 

@@ -14,6 +14,10 @@ function main {
 
       ln -fs `realpath ../server.jar` server.jar
 
+      mkdir -p ./world
+      ln -fs `realpath ../datapacks` ./world/datapacks
+      #cp -fr ../datapacks/* ./world/datapacks
+
       cat ../server.properties  \
         | envsubst              \
         > server.properties
